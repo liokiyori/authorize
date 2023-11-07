@@ -1,30 +1,40 @@
-
+from keras_facenet import FaceNet
+from PIL import Image
 import os
-from keras.layers import Dense,Conv2D,MaxPooling2D,Dropout,Flatten,Input
-from keras.models import Sequential, Model
-from keras.preprocessing.image import ImageDataGenerator
-from keras.applications.vgg16 import VGG16
-from keras.preprocessing import image
-from keras.applications.vgg16 import preprocess_input
 import numpy as np
+import pandas as pd
+from mtcnn import MTCNN
+
 
 class feature_extraction :
     def model(self):
-        num_classes = 2
-        img_size = 224
-        image_input = Input(shape=(img_size, img_size, 3))
-        model = VGG16(input_tensor=image_input, include_top=False, weights='imagenet')
+        model = FaceNet()
         return model  # return the model here
         
-    def feature_extraction(self,img_path):
+    def feature_extraction(self, img_path):
         features = []
         model = self.model()
+        detector = MTCNN()
         for each in os.listdir(img_path):
-            path = os.path.join(img_path,each)
-            img = image.load_img(path, target_size=(224, 224))
-            img_data = image.img_to_array(img)
-            img_data = np.expand_dims(img_data, axis=0)
-            img_data = preprocess_input(img_data)
-            feature = model.predict(img_data)
-            features.append(feature)
+            path = os.path.join(img_path, each)
+            image = Image.open(path)
+            image = np.asarray(image)
+            results = detector.detect_faces(image)
+            x1, y1, width, height = results['box']
+            face = image[y1:y1+height, x1:x1+width]
+            face = Image.fromarray(face)
+            face = face.resize((160, 160))
+            face = np.asarray(face)
+            face = face.astype('float32')
+            mean, std = face.mean(), face.std()
+            face = (face - mean) / std
+            face = np.expand_dims(face, axis=0)
+            embedding = model.embeddings(face)
+            features.append(embedding)
         return features
+    
+    def transformation_dataframe(self,features):
+        dataframe = pd.DataFrame(np.array(features).reshape(-1,len(features)))
+        dataframe = dataframe.T
+        return dataframe
+    

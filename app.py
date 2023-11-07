@@ -5,6 +5,8 @@ def main():
     img_path = input("Entrer le chemin des images : ")
     feature = extractor.feature_extraction(img_path)
     print(feature)
+    dataframe = extractor.transformation_dataframe(feature)
+    print(dataframe)
         
 if __name__ == "__main__":
     main()
