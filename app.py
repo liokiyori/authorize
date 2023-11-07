@@ -7,6 +7,7 @@ def main():
     #print(feature)
     dataframe = extractor.transformation_dataframe(feature,labels)
     print(dataframe)
+    extractor.sauvegarde_csv(dataframe)
         
 if __name__ == "__main__":
     main()

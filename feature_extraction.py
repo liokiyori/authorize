@@ -14,14 +14,15 @@ class feature_extraction :
         features = []
         labels = []
         model = self.model()
-        for each in os.listdir(img_path):
-            path = os.path.join(img_path, each)
-            img = image.load_img(path)
-            img = image.img_to_array(img)
-            img = np.expand_dims(img, axis=0)
-            feature = model.embeddings(img)
-            features.append(feature)
-            labels.append(os.path.basename(img_path))
+        for dirpath, dirnames, filenames in os.walk(img_path):
+            for filename in filenames:
+                path = os.path.join(dirpath, filename)
+                img = image.load_img(path)
+                img = image.img_to_array(img)
+                img = np.expand_dims(img, axis=0)
+                feature = model.embeddings(img)
+                features.append(feature)
+                labels.append(os.path.basename(dirpath))
         return features, labels
     
     def transformation_dataframe(self,features, labels):
@@ -30,3 +31,6 @@ class feature_extraction :
         dataframe["label"] = labels
         return dataframe
     
+    def sauvegarde_csv(self,dataframe):
+        dataframe.to_csv("data.csv", index=False)
+        return dataframe
